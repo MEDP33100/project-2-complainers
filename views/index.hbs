@@ -1,2 +1,13 @@
-<h1>{{title}}</h1>
-<p>Welcome to {{title}}</p>
+<h1>311 Complaints</h1>
+<ul>
+  {{#each complaints}}
+    <li>
+      <strong>Date:</strong> {{created_date}} <br>
+      <strong>Type:</strong> {{complaint_type}} <br>
+      <strong>ZIP Code:</strong> {{incident_zip}} <br>
+      <strong>Borough:</strong> {{borough}} <br>
+      <strong>Location:</strong> {{latitude}}, {{longitude}} <br>
+      <hr>
+    </li>
+  {{/each}}
+</ul>

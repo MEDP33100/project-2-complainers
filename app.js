@@ -1,41 +1,63 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+const express = require('express');
+const path = require('path');
+const hbs = require('hbs');
+const app = express();
+const port = 3000;
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-
-var app = express();
-
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'hbs');
-
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+// static files from /public folder files
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+// view engine for hbs files
+app.set('view engine', 'hbs');
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
+// register partials
+hbs.registerPartials(path.join(__dirname, 'views/partials'));
+
+// sample 311 complaints for testing (real API results are generating on local server)
+const complaints = [
+  {
+    created_date: '2025-04-15',
+    complaint_type: 'Noise',
+    incident_zip: '10001',
+    borough: 'MANHATTAN',
+    latitude: 40.748817,
+    longitude: -73.985428,
+  },
+  {
+    created_date: '2025-04-16',
+    complaint_type: 'Street Condition',
+    incident_zip: '10002',
+    borough: 'BROOKLYN',
+    latitude: 40.712776,
+    longitude: -74.005974,
+  },
+  {
+    created_date: '2025-04-17',
+    complaint_type: 'Illegal Parking',
+    incident_zip: '10003',
+    borough: 'QUEENS',
+    latitude: 40.73061,
+    longitude: -73.935242,
+  },
+];
+
+// map render
+app.get('/', (req, res) => {
+  res.render('index', {
+    title: '311 Complaints',
+    complaints,
+  });
 });
 
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+// for 404s
+app.use((req, res) => {
+  res.status(404).render('error', {
+    message: 'Page Not Found',
+    error: { status: 404, stack: '' },
+  });
 });
 
-module.exports = app;
+// start server
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
+});

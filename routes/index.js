@@ -1,31 +1,33 @@
-// Node fetch
+// Node fetch import workaround for ES modules
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 
-/* GET home page. */
+// GET home page with optional ?month=YYYY-MM filter
 router.get('/', async function(req, res, next) {
-  
-  try{
-    //makes request to API limit:10
-    const response = await fetch(
-      'https://data.cityofnewyork.us/resource/erm2-nwe9.json?$limit=50&$select=created_date,complaint_type,incident_zip,borough,latitude,longitude'
-    )
+  const selectedMonth = req.query.month; // e.g., '2025-04'
 
-    //change response to JSON
+  // calls most recent api 2025 1000(max)
+  let url = `https://data.cityofnewyork.us/resource/erm2-nwe9.json?$limit=1000&$order=created_date DESC&$select=created_date,complaint_type,incident_zip,borough,latitude,longitude`;
+
+
+
+  console.log("Final API URL:", url);
+
+  try {
+    const response = await fetch(url);
     const data = await response.json();
-
-    //passes the data into template to render
-    res.render('index', {complaints:data});
-    console.log("Data fetched from API:", data);
-
-  }
-
-  catch (err){
-    //if error show message
+    console.log("Data fetched from API:", data.length);
+    
+    res.render('index', {
+      complaints: data,
+      
+    });
+    
+  } catch (err) {
     console.error(err);
-    res.render('error', {message: 'API fetch failed', error:err});
+    res.render('error', { message: 'API fetch failed', error: err });
   }
 });
 

@@ -13,41 +13,9 @@ app.set('view engine', 'hbs');
 // register partials
 hbs.registerPartials(path.join(__dirname, 'views/partials'));
 
-// sample 311 complaints for testing (real API results are generating on local server)
-const complaints = [
-  {
-    created_date: '2025-04-15',
-    complaint_type: 'Noise',
-    incident_zip: '10001',
-    borough: 'MANHATTAN',
-    latitude: 40.748817,
-    longitude: -73.985428,
-  },
-  {
-    created_date: '2025-04-16',
-    complaint_type: 'Street Condition',
-    incident_zip: '10002',
-    borough: 'BROOKLYN',
-    latitude: 40.712776,
-    longitude: -74.005974,
-  },
-  {
-    created_date: '2025-04-17',
-    complaint_type: 'Illegal Parking',
-    incident_zip: '10003',
-    borough: 'QUEENS',
-    latitude: 40.73061,
-    longitude: -73.935242,
-  },
-];
+const indexRouter = require('./routes/index');
+app.use('/', indexRouter);
 
-// map render
-app.get('/', (req, res) => {
-  res.render('index', {
-    title: '311 Complaints',
-    complaints,
-  });
-});
 
 // for 404s
 app.use((req, res) => {
@@ -57,7 +25,19 @@ app.use((req, res) => {
   });
 });
 
+hbs.registerHelper('json', function(context) {
+  return JSON.stringify(context);
+});
+
+
+hbs.registerHelper('eq', function (a, b) {
+  return a === b;
+});
+
+
 // start server
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
+
+module.exports = app;

@@ -1,30 +1,13 @@
-<div class="container">
-  <aside class="sidebar">
-    <h1>311 Complaints</h1>
-
-    <label for="borough">Borough:</label>
-    <select id="borough">
-      <option value="all">All</option>
-      <option value="Brooklyn">Brooklyn</option>
-      <option value="Bronx">Bronx</option>
-      <option value="Manhattan">Manhattan</option>
-      <option value="Queens">Queens</option>
-      <option value="Staten Island">Staten Island</option>
-    </select>
-
-    <label for="type">Complaint Type:</label>
-    <select id="type">
-      <option value="all">All</option>
-      <option value="Noise">Noise</option>
-      <option value="Rodent">Rodent</option>
-      <option value="Sanitation">Sanitation</option>
-    </select>
-
-    <p id="complaint-count">Showing {{complaints.length}} complaints</p>
-  </aside>
-
-  <main class="map-container">
-    <div id="map"></div>
-  </main>
-</div>
-
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{{title}}</title>
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  </head>
+  <body>
+    {{{body}}}
+  </body>
+</html>

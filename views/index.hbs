@@ -5,6 +5,7 @@
 
 {{!-- //filters --}}
     <div class="filters">
+
       <label for="borough">Borough:</label>
       <select id="borough">
         <option value="all">All</option>
@@ -14,8 +15,25 @@
         <option value="Queens">Queens</option>
         <option value="Staten Island">Staten Island</option>
       </select>
+<br><br>
 
+ <label for="type-category">Top Complaints:</label>
+      <select id="type-category">
 
+  <option value="all">All Complaints</option>
+  <option value="noise">Noise</option>
+  <option value="illegal parking">Illegal Parking</option>
+  <option value="blocked driveway">Blocked Driveway</option>
+  <option value="heat/hot water">HEAT/HOT WATER</option>
+  <option value="street condition">Street Condition</option>
+</select>
+
+<br><br>
+{{!-- button for toggling cluster --}}
+  <button id="toggle-clustering">Toggle Clustering</button>
+
+<br><br>
+{{!-- //total complaint count --}}
       <p id="complaint-count">Showing {{complaints.length}} complaints</p>
     </div>
 
@@ -23,9 +41,6 @@
     <ul id="complaint-list" style="display: none;"></ul>
 
 
-
-{{!-- Breakdown container --> --}}
-<div id="breakdown"></div>
 
 
 
@@ -61,6 +76,8 @@
   const boroughSelect = document.getElementById("borough");
   const listEl = document.getElementById("complaint-list");
   const countEl = document.getElementById("complaint-count");
+  const typeCategorySelect = document.getElementById("type-category");
+
 
   //Sets up marker clustering with custom visual styling for cluster sizes
   let markerGroup = L.markerClusterGroup({
@@ -76,6 +93,8 @@
       });
     }
   });
+
+let clusteringEnabled = true;
 
   //Tooltip when zoomed out and for different cluster sizes
 const redTooltips = [
@@ -126,41 +145,22 @@ markerGroup.on('clustermouseover', function (e) {
 });
 
 
-function getTopComplaintTypes(complaintList, topN = 5) {
-  const counts = {};
-  complaintList.forEach(c => {
-    if (!c.complaint_type) return;
-    const type = c.complaint_type.trim();
-    counts[type] = (counts[type] || 0) + 1;
-  });
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  return sorted.slice(0, topN);
-}
-
-function updateBreakdown(complaintList) {
-  const topTypes = getTopComplaintTypes(complaintList);
-  const breakdownDiv = document.getElementById("breakdown");
-
-  breakdownDiv.innerHTML = `
-    <h3>Top Complaint Types</h3>
-    <ul>
-      ${topTypes.map(([type, count]) => `<li>${type} – ${count}</li>`).join("")}
-    </ul>
-  `;
-}
-
-
  //Renders markers and sidebar list based on given complaint data.Called on page load and every time filters change.
    
   
   function render(complaintList) {
 
-
-
     //Clear sidebar list
     listEl.innerHTML = ""; 
   //Clear old markers from map                 
     markerGroup.clearLayers();              
+
+ // Remove old standalone markers
+  map.eachLayer(layer => {
+    if (layer instanceof L.Marker && !markerGroup.hasLayer(layer)) {
+      map.removeLayer(layer);
+    }
+  });
 
     complaintList.forEach(c => {
       //checks for complaint location
@@ -179,42 +179,65 @@ const marker = L.marker([c.latitude, c.longitude])
   });
 
 
-//add to cluster group
-markerGroup.addLayer(marker);
+//enable or disable cluster
+if (clusteringEnabled) {
+  markerGroup.addLayer(marker);
+} else {
+map.addLayer(marker);
+}
+
 
       }
   
 
       
     });
-  // Add updated cluster group to map
-    map.addLayer(markerGroup); 
-    countEl.textContent = `Showing ${complaintList.length} complaints`;
-
-    updateBreakdown(complaintList);
-
-
+  if (clusteringEnabled) {
+  map.addLayer(markerGroup);
+    
 
   }
 
+    countEl.textContent = `Showing ${complaintList.length} complaints`;
+  //end of render
+
+
+  }
  
    //Filters the complaints array based on selected filters. Then calls `render()` to update map and list 
    
   function filterComplaints() {
-    const selectedBorough = boroughSelect.value;
-  
 
-    const filtered = complaints.filter(c => {
-      const boroughMatch = selectedBorough === "all" || c.borough?.toLowerCase() === selectedBorough.toLowerCase();
-      return boroughMatch;
+//sort by complaint type
+const selectedTypeCategory = typeCategorySelect.value;
+const selectedBorough = boroughSelect.value;
+
+const filtered = complaints.filter(c => {
+  const boroughMatch = selectedBorough === "all" || c.borough?.toLowerCase() === selectedBorough.toLowerCase();
+  // Check if complaint_type includes selected type string
+  const typeMatch = selectedTypeCategory === "all" || 
+    (c.complaint_type && c.complaint_type.toLowerCase().includes(selectedTypeCategory.toLowerCase()));
+
+     return boroughMatch && typeMatch;
+
     });
 
     render(filtered);
+
   }
+
+
+  
 
   //Event listeners for dropdown changes
   boroughSelect.addEventListener("change", filterComplaints);
-  
+  typeCategorySelect.addEventListener("change", filterComplaints);
+
+  document.getElementById("toggle-clustering").addEventListener("click", () => {
+  clusteringEnabled = !clusteringEnabled;
+  render(complaints); // Re-render with the new setting
+});
+
 
   //Initial rendering on page load
   if (Array.isArray(complaints)) {

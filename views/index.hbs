@@ -1,13 +1,45 @@
-<h1>311 Complaints</h1>
-<ul>
-  {{#each complaints}}
-    <li>
-      <strong>Date:</strong> {{created_date}} <br>
-      <strong>Type:</strong> {{complaint_type}} <br>
-      <strong>ZIP Code:</strong> {{incident_zip}} <br>
-      <strong>Borough:</strong> {{borough}} <br>
-      <strong>Location:</strong> {{latitude}}, {{longitude}} <br>
-      <hr>
-    </li>
-  {{/each}}
-</ul>
+<div class="container">
+
+  <aside class="sidebar">
+    <h1>311 Complaints</h1>
+
+    <div class="filters">
+      <label for="borough">Borough:</label>
+      <select id="borough">
+        <option value="all">All</option>
+        <option value="Brooklyn">Brooklyn</option>
+        <option value="Bronx">Bronx</option>
+        <option value="Manhattan">Manhattan</option>
+        <option value="Queens">Queens</option>
+        <option value="Staten Island">Staten Island</option>
+      </select>
+
+      <label for="type">Complaint Type:</label>
+      <select id="type">
+        <option value="all">All</option>
+        <option value="Noise">Noise</option>
+        <option value="Rodent">Rodent</option>
+        <option value="Sanitation">Sanitation</option>
+      </select>
+
+      <p id="complaint-count">Showing {{complaints.length}} complaints</p>
+    </div>
+    
+    <ul>
+      {{#each complaints}}
+        <li>
+          <strong>Date:</strong> {{created_date}} <br>
+          <strong>Type:</strong> {{complaint_type}} <br>
+          <strong>ZIP Code:</strong> {{incident_zip}} <br>
+          <strong>Borough:</strong> {{borough}} <br>
+          <strong>Location:</strong> {{latitude}}, {{longitude}} <br>
+          <hr>
+        </li>
+      {{/each}}
+    </ul>
+  </aside>
+
+  <main class="map-container">
+    <div id="map"></div>
+  </main>
+</div>

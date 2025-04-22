@@ -176,7 +176,19 @@ const marker = L.marker([c.latitude, c.longitude])
     permanent: false,
     direction: "top",
     opacity: 0.9
-  });
+  })
+  
+//user ineraction click popup information
+  .bindPopup(`
+  <div style="max-width: 200px;">
+    <strong>Complaint Type:</strong> ${c.complaint_type}<br/>
+    <strong>Borough:</strong> ${c.borough}<br/>
+    <strong>Zip Code:</strong> ${c.incident_zip}<br/>
+    <strong>Date:</strong> ${c.created_date || "N/A"}
+  </div>
+`);
+  
+  
 
 
 //enable or disable cluster

@@ -25,6 +25,7 @@ Complaint Type Filter - Users can filter by broad complaint categories like nois
 
 Toggle Marker Clustering - Users can turn clustering on or off. When clustering is on, markers are grouped into colorful circles with random tooltip messages. When off, markers appear individually across the map.
 
+Click Pins for More Info – Clicking a pin shows details like complaint type, borough, zip code, and date. Just a quick way to see what the complaint is about without filtering.
 ## **Technologies Used**
 
 Leaflet.js—  interactive map 

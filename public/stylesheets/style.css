@@ -1,8 +1,37 @@
-body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: sans-serif;
 }
 
-a {
-  color: #00B7FF;
+.container {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  height: 100vh;
+}
+
+.sidebar {
+  background: #f9f9f9;
+  padding: 20px;
+  overflow-y: auto;
+  border-right: 1px solid #ccc;
+}
+
+.map-container, #map {
+  height: 100%;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .sidebar {
+    border-right: none;
+    border-bottom: 1px solid #ccc;
+  }
 }

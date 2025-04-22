@@ -1,2 +1,260 @@
-<h1>{{title}}</h1>
-<p>Welcome to {{title}}</p>
+<!-- Layout container: sidebar + map side-by-side -->
+<div class="container">
+  <aside class="sidebar">
+    <h1>311 Complaints</h1>
+
+{{!-- //filters --}}
+    <div class="filters">
+
+      <label for="borough">Borough:</label>
+      <select id="borough">
+        <option value="all">All</option>
+        <option value="Brooklyn">Brooklyn</option>
+        <option value="Bronx">Bronx</option>
+        <option value="Manhattan">Manhattan</option>
+        <option value="Queens">Queens</option>
+        <option value="Staten Island">Staten Island</option>
+      </select>
+<br><br>
+
+ <label for="type-category">Top Complaints:</label>
+      <select id="type-category">
+
+  <option value="all">All Complaints</option>
+  <option value="noise">Noise</option>
+  <option value="illegal parking">Illegal Parking</option>
+  <option value="blocked driveway">Blocked Driveway</option>
+  <option value="heat/hot water">HEAT/HOT WATER</option>
+  <option value="street condition">Street Condition</option>
+</select>
+
+<br><br>
+{{!-- button for toggling cluster --}}
+  <button id="toggle-clustering">Toggle Clustering</button>
+
+<br><br>
+{{!-- //total complaint count --}}
+      <p id="complaint-count"> `{{complaints.length}} New Yorkers are having a bad day.`</p>
+    </div>
+
+{{!-- sidebar complaints now hidden --}}
+    <ul id="complaint-list" style="display: none;"></ul>
+
+
+
+
+
+  </aside>
+<!-- Map container -->
+  <main class="map-container">
+    <div id="map"></div>
+  </main>
+</div>
+
+{{!-- //heaflet style and scripts --}}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+
+
+<script>
+  //Pulls in complaint data from the backend (already fetched from the 311 API)
+  const complaints = {{{json complaints}}};
+
+  //Initializes Leaflet map centered on NYC
+  const map = L.map("map").setView([40.7128, -74.006], 11);
+
+  //Loads base map from OpenStreetMap tiles
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '&copy; OpenStreetMap contributors',
+  }).addTo(map);
+
+//Dropdown selectors
+  const boroughSelect = document.getElementById("borough");
+  const listEl = document.getElementById("complaint-list");
+  const countEl = document.getElementById("complaint-count");
+  const typeCategorySelect = document.getElementById("type-category");
+
+
+  //Sets up marker clustering with custom visual styling for cluster sizes
+  let markerGroup = L.markerClusterGroup({
+    iconCreateFunction: function (cluster) {
+      const count = cluster.getChildCount();
+      let c = ' marker-cluster-small';
+      if (count > 100) c = ' marker-cluster-large';
+      else if (count > 50) c = ' marker-cluster-medium';
+      return new L.DivIcon({
+        html: `<div><span>${count}</span></div>`,
+        className: 'marker-cluster' + c,
+        iconSize: new L.Point(40, 40)
+      });
+    }
+  });
+
+let clusteringEnabled = true;
+
+  //Tooltip when zoomed out and for different cluster sizes
+const redTooltips = [
+  "Certified Complain Zone™",
+  "The Complaint Olympics are happening here.",
+  "NYC’s hotspot for grievances and grumbles.",
+];
+
+const yellowTooltips = [
+   "Medium grumble levels detected.",
+  "Not quite chaos, but close.",
+  "Slightly spicy neighborhood energy.",
+  "Mild neighborhood drama.",
+];
+
+const greenTooltips = [
+  "Peaceful… for now.",
+  "Just a sprinkle of snark.",
+  "Some grumbling, but mostly chill.",
+  "The calm before the complaint storm.",
+  "Certified semi-whiny."
+];
+
+// Tooltip logic
+markerGroup.on('clustermouseover', function (e) {
+  const cluster = e.layer;
+  const count = cluster.getChildCount();
+  const zoom = map.getZoom();
+
+  let tooltipText = "";
+
+//depending on cluster size, random tooltip is pulled from the array
+  if (count > 100 && zoom <= 11) {
+    tooltipText = redTooltips[Math.floor(Math.random() * redTooltips.length)];
+  } else if (count > 50 && count <= 100) {
+    tooltipText = yellowTooltips[count % yellowTooltips.length];
+  } else if (count <= 50) {
+    tooltipText = greenTooltips[count % greenTooltips.length];
+  }
+
+  if (tooltipText) {
+    cluster.bindTooltip(tooltipText, {
+      permanent: false,
+      direction: "top",
+      offset: L.point(0, -10)
+    }).openTooltip();
+  }
+});
+
+
+ //Renders markers and sidebar list based on given complaint data.Called on page load and every time filters change.
+   
+  
+  function render(complaintList) {
+
+    //Clear sidebar list
+    listEl.innerHTML = ""; 
+  //Clear old markers from map                 
+    markerGroup.clearLayers();              
+
+ // Remove old standalone markers
+  map.eachLayer(layer => {
+    if (layer instanceof L.Marker && !markerGroup.hasLayer(layer)) {
+      map.removeLayer(layer);
+    }
+  });
+
+    complaintList.forEach(c => {
+      //checks for complaint location
+      if (c.latitude && c.longitude) {
+
+        //tooltip
+       const tooltipText = `<b>${c.complaint_type}</b><br>${c.borough}`;
+
+//tooltip shows on hover 
+
+const marker = L.marker([c.latitude, c.longitude])
+  .bindTooltip(tooltipText, {
+    permanent: false,
+    direction: "top",
+    opacity: 0.9
+  })
+  
+//user ineraction click popup information
+  .bindPopup(`
+  <div style="max-width: 200px;">
+    <strong>Complaint Type:</strong> ${c.complaint_type}<br/>
+    <strong>Borough:</strong> ${c.borough}<br/>
+    <strong>Zip Code:</strong> ${c.incident_zip}<br/>
+    <strong>Date:</strong> ${c.created_date || "N/A"}
+  </div>
+`);
+  
+  
+
+
+//enable or disable cluster
+if (clusteringEnabled) {
+  markerGroup.addLayer(marker);
+} else {
+map.addLayer(marker);
+}
+
+
+      }
+  
+
+      
+    });
+  if (clusteringEnabled) {
+  map.addLayer(markerGroup);
+    
+
+  }
+
+    countEl.textContent = ` ${complaintList.length} New Yorkers are having a bad day`;
+  //end of render
+
+
+  }
+ 
+   //Filters the complaints array based on selected filters. Then calls `render()` to update map and list 
+   
+  function filterComplaints() {
+
+//sort by complaint type
+const selectedTypeCategory = typeCategorySelect.value;
+const selectedBorough = boroughSelect.value;
+
+const filtered = complaints.filter(c => {
+  const boroughMatch = selectedBorough === "all" || c.borough?.toLowerCase() === selectedBorough.toLowerCase();
+  // Check if complaint_type includes selected type string
+  const typeMatch = selectedTypeCategory === "all" || 
+    (c.complaint_type && c.complaint_type.toLowerCase().includes(selectedTypeCategory.toLowerCase()));
+
+     return boroughMatch && typeMatch;
+
+    });
+
+    render(filtered);
+
+  }
+
+
+  
+
+  //Event listeners for dropdown changes
+  boroughSelect.addEventListener("change", filterComplaints);
+  typeCategorySelect.addEventListener("change", filterComplaints);
+
+  document.getElementById("toggle-clustering").addEventListener("click", () => {
+  clusteringEnabled = !clusteringEnabled;
+  render(complaints); // Re-render with the new setting
+});
+
+
+  //Initial rendering on page load
+  if (Array.isArray(complaints)) {
+    render(complaints);
+  } else {
+    console.error("Expected complaints to be an array but got:", complaints);
+  }
+</script>
